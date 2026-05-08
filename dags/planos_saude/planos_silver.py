@@ -1,0 +1,47 @@
+from airflow import DAG
+from airflow.providers.standard.operators.bash import BashOperator
+from airflow.providers.standard.sensors.external_task import ExternalTaskSensor
+from datetime import datetime
+import pendulum
+
+
+with DAG(
+    dag_id="plano_silver_dag",
+    schedule="56 9 * * *",
+    start_date=pendulum.datetime(2026, 5, 4, tz="America/Sao_Paulo"),
+    catchup=True
+) as dag:
+
+    # espera a dag bronze terminar
+    wait_for_bronze = ExternalTaskSensor(
+        task_id="wait_for_bronze",
+        external_dag_id="plano_bronze_dag",
+        external_task_id="run_plano_bronze",
+        mode="poke",
+        timeout=1800,
+        poke_interval=30
+    )
+
+    # executa o Spark
+    run_spark_job = BashOperator(
+        task_id="run_plano_silver",
+        bash_command="""
+        docker exec spark-master spark-submit \
+        --master spark://spark-master:7077 \
+        --conf spark.driver.host=spark-master \
+        --conf spark.driver.bindAddress=0.0.0.0 \
+        --conf spark.hadoop.fs.s3a.access.key=admin \
+        --conf spark.hadoop.fs.s3a.secret.key=admin123 \
+        --conf spark.hadoop.fs.s3a.endpoint=http://minio:9000 \
+        --conf spark.hadoop.fs.s3a.path.style.access=true \
+        --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
+        --conf spark.jars.ivy=/tmp/.ivy \
+        --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false \
+        --conf spark.hadoop.fs.s3a.endpoint.region=us-east-1 \
+        --conf spark.hadoop.fs.s3a.connection.maximum=100 \
+        --conf spark.hadoop.fs.s3a.attempts.maximum=1 \
+        /opt/spark-jobs/planos_saude/silver.py
+        """
+    )
+
+    wait_for_bronze >> run_spark_job
