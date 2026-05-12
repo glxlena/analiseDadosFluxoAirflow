@@ -7,8 +7,8 @@ import pendulum
 
 with DAG(
     dag_id="internacoes_silver_dag",
-    schedule="11 08 * * *",  # roda depois da ingestão
-    start_date=pendulum.datetime(2026, 4, 26, tz="America/Sao_Paulo"),
+    schedule="18 9 * * *",
+    start_date=pendulum.datetime(2026, 5, 12, tz="America/Sao_Paulo"),
     catchup=True
 ) as dag:
 

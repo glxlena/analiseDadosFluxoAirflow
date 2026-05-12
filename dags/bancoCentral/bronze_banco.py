@@ -6,25 +6,25 @@ import pendulum
 
 
 with DAG(
-    dag_id="internacoes_gold_dag",
-    schedule="18 9 * * *",
-    start_date=pendulum.datetime(2026, 5, 12, tz="America/Sao_Paulo"),
+    dag_id="banco_bronze_dag",
+    schedule="11 08 * * *",  # roda depois da ingestão
+    start_date=pendulum.datetime(2026, 5, 11, tz="America/Sao_Paulo"),
     catchup=True
 ) as dag:
 
-    # espera a dag silver terminar
-    wait_for_silver = ExternalTaskSensor(
-        task_id="wait_for_silver",
-        external_dag_id="internacoes_silver_dag",
-        external_task_id="run_internacoes_silver",
+    # espera a DAG de upload terminar
+    wait_for_upload = ExternalTaskSensor(
+        task_id="wait_for_upload",
+        external_dag_id="upload_api",
+        external_task_id="upload_apiBanco",
         mode="poke",
-        timeout=1800,
+        timeout=600,
         poke_interval=30
     )
 
     # executa o Spark
     run_spark_job = BashOperator(
-        task_id="run_internacoes_gold",
+        task_id="run_banco_bronze",
         bash_command="""
         docker exec spark-master spark-submit \
         --master spark://spark-master:7077 \
@@ -40,8 +40,8 @@ with DAG(
         --conf spark.hadoop.fs.s3a.endpoint.region=us-east-1 \
         --conf spark.hadoop.fs.s3a.connection.maximum=100 \
         --conf spark.hadoop.fs.s3a.attempts.maximum=1 \
-        /opt/spark-jobs/internacoes/gold.py
+        /opt/spark-jobs/bancoCentral/bronze.py
         """
     )
 
-    wait_for_silver >> run_spark_job
+    wait_for_upload >> run_spark_job

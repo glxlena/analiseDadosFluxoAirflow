@@ -22,8 +22,8 @@ def upload_to_minio():
 
 with DAG(
     dag_id="upload_internacoes",
-    schedule="11 08 * * *",
-    start_date=pendulum.datetime(2026, 4, 23, tz="America/Sao_Paulo"),
+    schedule="18 9 * * *",
+    start_date=pendulum.datetime(2026, 5, 12, tz="America/Sao_Paulo"),
     catchup=False
 ) as dag:
 
