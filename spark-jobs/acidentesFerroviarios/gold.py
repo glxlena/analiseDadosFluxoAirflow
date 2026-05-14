@@ -3,7 +3,7 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
 spark = SparkSession.builder \
-    .appName("Load Silver - Banco Central do Brasil") \
+    .appName("Load Gold - Acidentes Ferroviários") \
     .config("spark.hadoop.fs.s3a.endpoint", "http://minio:9000") \
     .config("spark.hadoop.fs.s3a.access.key", "admin") \
     .config("spark.hadoop.fs.s3a.secret.key", "admin123") \
