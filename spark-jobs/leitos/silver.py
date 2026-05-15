@@ -42,7 +42,32 @@ df = df.withColumnRenamed("codigo_do_tipo_da_unidade", "cd_tipo_uni") \
     .withColumnRenamed("tipo_da_gestao_do_hospital", "tipo_gestao") \
     .withColumnRenamed("unidade_da_federacao_onde_fica_o_hospital", "uf")
 
-df = df.withColumn("qnt_uti_adulto", )
+## para otimizar, tem como colocar os nomes das colunas em um array [], e depois criar um laço for, transformando todas elas em int 
+## da mesma maneira
+df = df.withColumn("qnt_uti_adulto", expr("try_cast(qnt_uti_adulto as INTEGER)")) \
+    .withColumn("qnt_uti_coronariana", expr("try_cast(qnt_uti_coronariana as INTEGER)")) \
+    .withColumn("qnt_leitos_uti", expr("try_cast(qnt_leitos_uti as INTEGER)")) \
+    .withColumn("qnt_uti_neonatal", expr("try_cast(qnt_uti_neonatal as INTEGER)")) \
+    .withColumn("qnt_uti_pediatrico", expr("try_cast(qnt_uti_pediatrico as INTEGER)")) \
+    .withColumn("qnt_uti_queimado", expr("try_cast(qnt_uti_queimado as INTEGER)")) \
+    .withColumn("qnt_uti_sus_adulto", expr("try_cast(qnt_uti_sus_adulto as INTEGER)")) \
+    .withColumn("qnt_uti_sus_coronariana", expr("try_cast(qnt_uti_sus_coronariana as INTEGER)")) \
+    .withColumn("qnt_uti_sus", expr("try_cast(qnt_uti_sus as INTEGER)")) \
+    .withColumn("qnt_uti_sus_neonatal", expr("try_cast(qnt_uti_sus_neonatal as INTEGER)")) \
+    .withColumn("qnt_uti_sus_pediatrico", expr("try_cast(qnt_uti_sus_pediatrico as INTEGER)")) \
+    .withColumn("qnt_uti_sus_queimado", expr("try_cast(qnt_uti_sus_queimado as INTEGER)")) \
+    .withColumn("qnt_total_leitos", expr("try_cast(qnt_total_leitos as INTEGER)")) \
+    .withColumn("qnt_total_leitos_sus", expr("try_cast(qnt_total_leitos_sus as INTEGER)"))
+
+df = df.withColumn("desc_juri_hosp", regexp_replace(col("desc_juri_hosp"), "_", " "))
+df = df.withColumn(
+    "desc_tipo_gestao",
+    when(col("tipo_gestao") == "M", "Municipal")
+    .when(col("tipo_gestao") == "E", "Estadual")
+    .when(col("tipo_gestao") == "D", "Dupla")
+    .when(col("tipo_gestao") == "S", "Sem Gestão")
+    .otherwise("Não informado")
+)
 
 df = df.drop(
     "codigo_ibge_do_municipio",
